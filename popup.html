@@ -1,0 +1,61 @@
+<!-- popup.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Transcriber Popup</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      background: #202124;
+      color: #ffffff;
+      width: 300px;
+    }
+    .container {
+      padding: 12px;
+    }
+    button {
+      width: 100%;
+      margin: 6px 0;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      background: #4a4a4a;
+      color: white;
+    }
+    button:hover {
+      background: #5e5e5e;
+    }
+    #status, #duration {
+      margin: 6px 0;
+    }
+    .summary {
+      margin-top: 6px;
+      padding: 8px;
+      background: #2f3033;
+      border-radius: 5px;
+      max-height: 120px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <button id="startBtn">Start Recording</button>
+    <button id="stopBtn" disabled>Stop Recording</button>
+    <div id="status">Idle</div>
+    <div id="duration">Duration: 0s</div>
+
+    <div class="summary" id="finalSummary">Final Summary: (none)</div>
+    <button id="historyBtn">View History</button>
+    <button id="optionsBtn">Settings (API Key)</button>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>

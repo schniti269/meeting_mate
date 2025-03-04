@@ -1,0 +1,51 @@
+<!-- history.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Transcriptions History</title>
+  <style>
+    body {
+      background: #202124;
+      color: #ffffff;
+      font-family: sans-serif;
+      margin: 0;
+      padding: 12px;
+    }
+    h1 {
+      margin-bottom: 8px;
+    }
+    .entry {
+      background: #2f3033;
+      padding: 8px;
+      margin-bottom: 12px;
+      border-radius: 5px;
+      white-space: pre-wrap;
+    }
+    .time {
+      font-size: 0.8em;
+      margin-bottom: 6px;
+      opacity: 0.8;
+    }
+    button {
+      border: none;
+      padding: 8px;
+      border-radius: 5px;
+      cursor: pointer;
+      background: #4a4a4a;
+      color: #fff;
+      margin-top: 10px;
+    }
+    button:hover {
+      background: #5e5e5e;
+    }
+  </style>
+</head>
+<body>
+  <h1>Transcription History</h1>
+  <div id="historyContainer"></div>
+  <button id="clearBtn">Clear History</button>
+
+  <script src="history.js"></script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "name": "Long Audio Transcriber & Summarizer",
+  "version": "2.0",
+  "manifest_version": 3,
+  "description": "Records audio in 1-min chunks, transcribes each chunk, then summarizes. Includes history and API key input.",
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "options_page": "options.html",
+  "permissions": [
+    "storage",
+    "offscreen",
+    "activeTab",
+    "tabCapture",
+    "desktopCapture"
+  ],
+  "host_permissions": [
+    "https://api.openai.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
+}

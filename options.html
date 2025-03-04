@@ -1,0 +1,59 @@
+<!-- options.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Extension Options</title>
+  <style>
+    body {
+      background: #202124;
+      color: #ffffff;
+      font-family: sans-serif;
+      margin: 0;
+      padding: 12px;
+    }
+    h2 {
+      margin-bottom: 8px;
+    }
+    label {
+      display: block;
+      margin-bottom: 4px;
+    }
+    input {
+      width: 100%;
+      padding: 6px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+      border: none;
+      background: #2f3033;
+      color: #eee;
+    }
+    button {
+      border: none;
+      padding: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      background: #4a4a4a;
+      color: #fff;
+      width: 100%;
+    }
+    button:hover {
+      background: #5e5e5e;
+    }
+    .msg {
+      margin-top: 8px;
+      font-size: 0.9em;
+      color: #ccc;
+    }
+  </style>
+</head>
+<body>
+  <h2>Transcriber Extension Settings</h2>
+  <label for="apiKey">OpenAI API Key</label>
+  <input type="text" id="apiKey" placeholder="Enter your API key here">
+  <button id="saveBtn">Save</button>
+  <div class="msg" id="statusMsg"></div>
+
+  <script src="options.js"></script>
+</body>
+</html>
