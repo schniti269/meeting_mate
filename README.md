@@ -35,12 +35,13 @@ Meeting Mate is a Chrome extension designed to **record, transcribe, and summari
 ## 📸 Screenshots
 
 ### 🔹 Popup Interface
-![Popup Screenshot](Screenshot%202025-03-04%20122054.png)
-
-### 🔹 Transcription History
 ![History Screenshot](Screenshot%202025-03-04%20122128.png)
 
-### 🔹 Settings Page (API Key Configuration)
+### 🔹 Transcription History
+![Popup Screenshot](Screenshot%202025-03-04%20122054.png)
+
+
+### 🔹 Native Capturing API
 ![Options Screenshot](Screenshot%202025-03-04%20122411.png)
 
 ---
