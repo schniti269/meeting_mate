@@ -1,18 +1,14 @@
 // offscreen.js
-// Attempt to fix the undefined chrome.storage.local by forcing the extension context
-// to load offscreen in extension origin. We'll fetch the API key from background if not available.
 
 let mediaRecorder;
 let isRecording = false;
 let duration = 0;
 let startTime = 0;
 let durationInterval;
-
-let recordedChunks = []; // Each chunk is up to 1 min
-
-// We'll store a cachedApiKey if possible
+let recordedChunks = []; // Each chunk is ~1 minute
 let cachedApiKey = "";
 
+// Listen for messages to start/stop or receive API key
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg.type === "start") {
     startRecording();
@@ -25,7 +21,6 @@ chrome.runtime.onMessage.addListener((msg) => {
 
 async function startRecording() {
   if (isRecording) return;
-  // Get or request key from background
   let apiKey = await getApiKey();
   if (!apiKey) {
     console.warn("No API key available. Will record but cannot transcribe.");
@@ -33,7 +28,7 @@ async function startRecording() {
   recordedChunks = [];
 
   try {
-    // Request display/audio capture
+    // Request display capture with audio; immediately stop video tracks.
     const stream = await navigator.mediaDevices.getDisplayMedia({
       video: true,
       audio: {
@@ -42,7 +37,6 @@ async function startRecording() {
         noiseSuppression: false
       }
     });
-    // Immediately stop any video tracks so only audio remains
     stream.getVideoTracks().forEach((track) => track.stop());
 
     mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
@@ -53,9 +47,8 @@ async function startRecording() {
     };
     mediaRecorder.onerror = (err) => console.error("MediaRecorder error:", err);
 
-    // timeslice=60000 => every 1 min we get a chunk
-    mediaRecorder.start(60_000);
-
+    // Start recording with a timeslice of 60 seconds.
+    mediaRecorder.start(60000);
     startTime = Date.now();
     startDurationTimer();
     isRecording = true;
@@ -76,13 +69,14 @@ function stopRecording() {
     console.log("[Offscreen] Recorder stopped. Processing chunks...");
 
     let apiKey = await getApiKey();
-    let allTranscribed = "";
+    let fullTranscript = "";
 
+    // Process each recorded audio chunk separately.
     if (apiKey) {
       for (let i = 0; i < recordedChunks.length; i++) {
         const chunkBlob = recordedChunks[i];
         const chunkText = await transcribeAudio(chunkBlob, apiKey);
-        allTranscribed += chunkText + " ";
+        fullTranscript += chunkText + " ";
       }
     } else {
       console.warn("No API key found. Cannot transcribe audio.");
@@ -94,9 +88,10 @@ function stopRecording() {
     }
     isRecording = false;
 
-    let finalSummary = allTranscribed.trim();
+    let finalSummary = fullTranscript.trim();
+    // Use iterative summarization to reduce text to 500 words or fewer.
     if (apiKey && finalSummary) {
-      finalSummary = await summarizeText(finalSummary, apiKey);
+      finalSummary = await iterativeSummarize(finalSummary, apiKey, 500);
     }
     if (!finalSummary) {
       finalSummary = "No transcript / summary available.";
@@ -134,9 +129,7 @@ function sendRecordingState(isRec, dur) {
 }
 
 async function getApiKey() {
-  // If we have it cached, use that
   if (cachedApiKey) return cachedApiKey;
-  // Otherwise, request from background
   const keyFromBg = await new Promise((resolve) => {
     chrome.runtime.sendMessage({ type: "requestApiKey" }, (response) => {
       resolve(response?.apiKey || "");
@@ -161,7 +154,7 @@ async function transcribeAudio(blob, apiKey) {
     });
     const data = await resp.json();
     if (!resp.ok) {
-      console.error("Transcription error:", data);
+      // Return an empty string on error
       return "";
     }
     return data.text || "";
@@ -182,18 +175,14 @@ async function summarizeText(text, apiKey) {
       body: JSON.stringify({
         model: "gpt-4o-mini",
         messages: [
-          { role: "system", content: "You are a concise summarizer." },
-          {
-            role: "user",
-            content: text
-          }
+          { role: "system", content: "You are a concise summarizer for Meeting, you will be given a transcript of speech" },
+          { role: "user", content: text }
         ],
-        temperature: 0.5
+        temperature: 0.8
       })
     });
     const data = await resp.json();
     if (!resp.ok) {
-      console.error("Summarization error:", data);
       return text;
     }
     const summary = data.choices?.[0]?.message?.content;
@@ -202,4 +191,42 @@ async function summarizeText(text, apiKey) {
     console.error("Summarization fetch error:", err);
     return text;
   }
+}
+// Recursively summarize text until it fits within maxWords,
+// but always perform at least one summarization pass.
+async function iterativeSummarize(text, apiKey, maxWords, iteration = 0) {
+  // After the first summarization, if the text is concise enough, stop.
+  if (iteration > 0 && wordCount(text) <= maxWords) return text;
+  
+  // Split text into chunks of maxWords words each.
+  const chunks = splitTextIntoChunks(text, maxWords);
+  let summarizedChunks = [];
+  for (const chunk of chunks) {
+    const summary = await summarizeText(chunk, apiKey);
+    summarizedChunks.push(summary);
+  }
+  
+  const combinedSummary = summarizedChunks.join(" ");
+  
+  // Prevent infinite loops: if no reduction is made or after several iterations, return.
+  if (iteration >= 5 || wordCount(combinedSummary) >= wordCount(text)) {
+    return combinedSummary;
+  }
+  
+  return await iterativeSummarize(combinedSummary, apiKey, maxWords, iteration + 1);
+}
+
+// Helper: Count words in a text
+function wordCount(text) {
+  return text.trim().split(/\s+/).length;
+}
+
+// Helper: Split text into chunks of maxWords words each
+function splitTextIntoChunks(text, maxWords) {
+  const words = text.trim().split(/\s+/);
+  let chunks = [];
+  for (let i = 0; i < words.length; i += maxWords) {
+    chunks.push(words.slice(i, i + maxWords).join(" "));
+  }
+  return chunks;
 }
